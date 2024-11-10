@@ -10,7 +10,8 @@ import { CommonModule, LogInterceptor } from './modules/common';
  * These are API defaults that can be changed using environment variables,
  * it is not required to change them (see the `.env.example` file)
  */
-const API_DEFAULT_PORT = 10000;
+const ADDRESS_SERVER_DEFAULT = '0.0.0.0';
+const API_DEFAULT_PORT = 3001;
 const API_DEFAULT_PREFIX = '/api/v1/';
 
 /**
@@ -68,7 +69,7 @@ async function bootstrap(): Promise<void> {
     const logInterceptor = app.select(CommonModule).get(LogInterceptor);
     app.useGlobalInterceptors(logInterceptor);
 
-    await app.listen(process.env.API_PORT || API_DEFAULT_PORT, () => {
+    await app.listen(process.env.API_PORT || API_DEFAULT_PORT, process.env.ADDRESS_SERVER || ADDRESS_SERVER_DEFAULT, () => {
         // eslint-disable-next-line no-console
         console.log(`App listening on port ${process.env.API_PORT || API_DEFAULT_PORT}`);
     });
