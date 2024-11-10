@@ -11,9 +11,60 @@ datasource db {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  firstName String
-  lastName  String
-  email     String
-  password  String
+  id              Int     @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String
+  password        String
+}
+
+model Inventory {
+  id              Int    @id @default(autoincrement())
+  name            String
+  quantity        Decimal
+  price           Decimal
+  category        String
+  restockLevel    Decimal
+  restockQuantity Decimal
+}
+
+model Ingredient {
+  id              Int    @id @default(autoincrement())
+  productId       Int
+  name            String
+  stockQuantity   Decimal
+  reorderLevel    Decimal
+  unitOfMeasure   String
+}
+
+model Sale {
+  id              Int    @id @default(autoincrement())
+  productId       Int
+  saleDate        DateTime
+  quantitySold    Decimal
+}
+
+model Production {
+  id                  Int    @id @default(autoincrement())
+  productId           Int
+  productionDate      DateTime
+  quantityProduced    Decimal
+  postProductionStock Decimal
+}
+
+model ProductionIngredient {
+  id                  Int    @id @default(autoincrement())
+  productionId        Int
+  ingredientId        Int
+  saleDate            DateTime
+  quantityNeeded      Decimal
+  unitOfMeasure       String
+}
+
+model Recipe {
+  id                  Int    @id @default(autoincrement())
+  productId           Int
+  ingredientId        Int
+  quantityPerUnit     Decimal
+  unitOfMeasure       String
 }

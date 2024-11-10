@@ -2,7 +2,7 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { HealthCheckService, PrismaHealthIndicator } from '@nestjs/terminus';
 
 import { PrismaService } from '../provider';
-import { HealthGuard } from '../security/health.guard';
+import { GuestGuard } from '../security/guest.guard';
 
 @Controller('health')
 export class HealthController {
@@ -14,7 +14,7 @@ export class HealthController {
     ) {}
 
     @Get()
-    @UseGuards(HealthGuard)
+    @UseGuards(GuestGuard)
     public async healthCheck() {
         return this.health.check([
             async () => this.database.pingCheck('database', this.prisma),

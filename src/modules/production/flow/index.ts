@@ -1,0 +1,1 @@
+export { ProductionPipe } from './production.pipe';

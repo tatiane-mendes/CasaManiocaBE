@@ -1,0 +1,1 @@
+export { IngredientController } from './ingredient.controller';

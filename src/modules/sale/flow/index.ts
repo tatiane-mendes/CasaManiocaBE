@@ -1,0 +1,1 @@
+export { SalePipe } from './sale.pipe';

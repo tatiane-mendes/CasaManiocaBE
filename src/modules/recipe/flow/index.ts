@@ -1,0 +1,1 @@
+export { RecipePipe } from './recipe.pipe';

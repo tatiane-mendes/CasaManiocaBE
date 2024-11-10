@@ -1,0 +1,1 @@
+export { ProductionIngredientPipe } from './productionIngredient.pipe';

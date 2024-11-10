@@ -17,9 +17,9 @@ export class UserService {
      */
     public async find(): Promise<UserData[]> {
 
-        const users = await this.prismaService.user.findMany({});
+        const entities = await this.prismaService.user.findMany({});
 
-        return users.map(user => new UserData(user));
+        return entities.map(entity => new UserData(entity));
     }
 
     /**
@@ -29,9 +29,9 @@ export class UserService {
      */
     public async findId(id: number): Promise<UserData> {
         
-        const user = await this.prismaService.user.findUnique({ where: { id: +id} });
+        const entity = await this.prismaService.user.findUnique({ where: { id: +id} });
 
-        return new UserData(user as any);
+        return new UserData(entity as any);
     }
 
     /**
@@ -41,9 +41,9 @@ export class UserService {
      */
     public async findEmailAndPassword(email: string, password: string): Promise<UserOutput | null> {
         
-        const user = await this.prismaService.user.findFirst({ where: { email: email, password: password} });
+        const entity = await this.prismaService.user.findFirst({ where: { email: email, password: password} });
 
-        return user != null ? new UserOutput(user) : null;
+        return entity != null ? new UserOutput(entity) : null;
     }
 
     /**
@@ -54,11 +54,11 @@ export class UserService {
      */
     public async create(data: UserInput): Promise<UserData> {
 
-        const user = await this.prismaService.user.create({
+        const entity = await this.prismaService.user.create({
             data
         });
 
-        return new UserData(user);
+        return new UserData(entity);
     }
 
     /**
@@ -69,12 +69,12 @@ export class UserService {
      */
     public async update(data: UserInput): Promise<UserData> {
 
-        const user = await this.prismaService.user.update({
+        const entity = await this.prismaService.user.update({
             data,
             where: { id: data.id }
         });
 
-        return new UserData(user);
+        return new UserData(entity);
     }
 
     /**
@@ -85,10 +85,10 @@ export class UserService {
      */
     public async delete(id: number): Promise<UserData> {
 
-        const user = await this.prismaService.user.delete({
+        const entity = await this.prismaService.user.delete({
             where: { id }
         });
 
-        return new UserData(user);
+        return new UserData(entity);
     }
 }

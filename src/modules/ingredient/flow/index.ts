@@ -1,0 +1,1 @@
+export { IngredientPipe } from './ingredient.pipe';

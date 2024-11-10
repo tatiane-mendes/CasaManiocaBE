@@ -1,0 +1,1 @@
+export { ProductionIngredientService } from './productionIngredient.service';
