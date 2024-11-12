@@ -6,6 +6,8 @@ import { HealthController } from './controller';
 import { LogInterceptor } from './flow';
 import { configProvider, LoggerService, PrismaService } from './provider';
 import { JwtService } from './security/jwt.service';
+import { EmailService } from './service';
+import { mailerConfig } from './provider/mailer.config';
 
 @Module({
     imports: [
@@ -21,21 +23,24 @@ import { JwtService } from './security/jwt.service';
               },
             }),
             inject: [ConfigService],
-          })
+          }),
+        mailerConfig
     ],
     providers: [
         configProvider,
         LoggerService,
         LogInterceptor,
         PrismaService,
-        JwtService
+        JwtService,
+        EmailService
     ],
     exports: [
         configProvider,
         LoggerService,
         LogInterceptor,
         PrismaService,
-        JwtService
+        JwtService,
+        EmailService
     ],
     controllers: [
         HealthController

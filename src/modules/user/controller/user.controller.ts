@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpStatus, Post, Put, Delete, UseGuards, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { LoggerService, RestrictedGuard } from '../../common';
+import { EmailService, LoggerService, RestrictedGuard } from '../../common';
 
 import { UserPipe } from '../flow';
 import { UserData, UserInput } from '../model';
@@ -13,9 +13,9 @@ import { UserService } from '../service';
 export class UserController {
 
     public constructor(
-        //@Inject(Service.CONFIG)
         private readonly userService: UserService,
-        private readonly logger: LoggerService
+        private readonly logger: LoggerService,
+        private readonly emailService: EmailService
     ) { }
 
     @Get()
@@ -56,6 +56,8 @@ export class UserController {
 
         const user = await this.userService.update(input);
         this.logger.info(`Updated the user with ID ${user.id}`);
+
+        await this.emailService.sendRecoveryNewPassword(user);
 
         return user;
     }
