@@ -1,13 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../../common';
+import { EmailService, PrismaService } from '../../common';
 import { UserData, UserInput, UserOutput } from '../model';
 
 @Injectable()
 export class UserService {
 
     public constructor(
-        private readonly prismaService: PrismaService
+        private readonly prismaService: PrismaService,
+        private readonly emailService: EmailService
     ) { }
 
     /**
@@ -15,11 +16,15 @@ export class UserService {
      *
      * @returns A user list
      */
-    public async find(): Promise<UserData[]> {
+    public async find(): Promise<UserOutput[]> {
 
         const entities = await this.prismaService.user.findMany({});
 
-        return entities.map(entity => new UserData(entity));
+        const list = await Promise.all(
+            entities.map(async entity => this.returnOutput(entity))
+        );
+        
+        return list;
     }
 
     /**
@@ -27,11 +32,15 @@ export class UserService {
      *
      * @returns A user list
      */
-    public async findId(id: number): Promise<UserData> {
+    public async findId(id: number): Promise<UserOutput> {
         
-        const entity = await this.prismaService.user.findUnique({ where: { id: +id} });
+        const entity = await this.prismaService.user.findUnique({ where: { id: +id} }) as UserData;
 
-        return new UserData(entity as any);
+        return this.returnOutput(entity);
+    }
+
+    private async returnOutput(entity: UserData): Promise<UserOutput> {
+        return new UserOutput(entity);
     }
 
     /**
@@ -41,9 +50,9 @@ export class UserService {
      */
     public async findEmailAndPassword(email: string, password: string): Promise<UserOutput | null> {
         
-        const entity = await this.prismaService.user.findFirst({ where: { email: email, password: password} });
+        const entity = await this.prismaService.user.findFirst({ where: { email: email, password: password} }) as UserData;
 
-        return entity != null ? new UserOutput(entity) : null;
+        return this.returnOutput(entity);
     }
 
     /**
@@ -52,13 +61,13 @@ export class UserService {
      * @param data User details
      * @returns A user created in the database
      */
-    public async create(data: UserInput): Promise<UserData> {
+    public async create(data: UserInput): Promise<UserOutput> {
 
         const entity = await this.prismaService.user.create({
             data
         });
 
-        return new UserData(entity);
+        return this.returnOutput(entity);
     }
 
     /**
@@ -67,14 +76,14 @@ export class UserService {
      * @param data User details
      * @returns A user updated in the database
      */
-    public async update(data: UserInput): Promise<UserData> {
+    public async update(data: UserInput): Promise<UserOutput> {
 
         const entity = await this.prismaService.user.update({
             data,
             where: { id: data.id }
         });
 
-        return new UserData(entity);
+        return this.returnOutput(entity);
     }
 
     /**
@@ -83,12 +92,44 @@ export class UserService {
      * @param data User id
      * @returns A user deleted in the database
      */
-    public async delete(id: number): Promise<UserData> {
+    public async delete(id: number): Promise<UserOutput> {
 
         const entity = await this.prismaService.user.delete({
             where: { id }
         });
 
-        return new UserData(entity);
+        return this.returnOutput(entity);
+    }
+
+    /**
+     * Recovery password
+     *
+     * @param data Email
+     * @returns A password user updated in the database
+     */
+    public async recoveryPassword(email: string): Promise<UserOutput | any> {
+
+        let entity = await this.prismaService.user.findFirst({ where: { email: email } });
+
+        if (entity != null) {
+            entity.password = this.generateRandomString(8);
+            this.update(entity);
+            
+            await this.emailService.sendRecoveryNewPassword(entity);
+            return this.returnOutput(entity);
+        }
+        else {
+            return new BadRequestException(`User ${email} not found`);
+        }
+    }
+
+    private generateRandomString(length: number): string {
+        const characters = '0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            result += characters[randomIndex];
+        }
+        return result;
     }
 }
