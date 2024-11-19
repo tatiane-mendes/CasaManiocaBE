@@ -58,7 +58,11 @@ async function bootstrap(): Promise<void> {
         new FastifyAdapter()
     );
 
-    // @todo Enable Helmet for better API security headers
+    app.enableCors({
+        origin: '*',
+        methods: '*',
+        credentials: true,
+    });
 
     app.setGlobalPrefix(process.env.API_PREFIX || API_DEFAULT_PREFIX);
 

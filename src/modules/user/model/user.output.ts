@@ -16,9 +16,11 @@ export class UserOutput {
     public readonly email: string;
 
     public constructor(entity: User) {
-        this.id = entity.id;
-        this.firstName = entity.firstName;
-        this.lastName = entity.lastName;
-        this.email = entity.email;
+        if (entity) {
+            this.id = entity.id;
+            this.firstName = entity.firstName;
+            this.lastName = entity.lastName;
+            this.email = entity.email;    
+        }
     }
 }

@@ -27,7 +27,7 @@ export class AuthorizationController {
 
     const user = await this.userService.findEmailAndPassword(body.email, body.password);
 
-    if (user != null) {
+    if (user?.id) {
       
       const token = this.jwtService.generateToken(payload);
       this.logger.info(`Token generated: ${token}`);
