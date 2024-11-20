@@ -13,9 +13,6 @@ export class IngredientData {
     @ApiProperty({ description: 'Name', example: 'Sugar' })
     public readonly name: string;
 
-    @ApiProperty({ description: 'Id of the product', example: '1' })
-    public readonly productId: number;
-
     @ApiProperty({ description: 'Reorder level', example: '5.99' })
     public readonly reorderLevel: Decimal;
 
@@ -28,7 +25,6 @@ export class IngredientData {
     public constructor(entity: Ingredient) {
         this.id = entity.id;
         this.name = entity.name;
-        this.productId = entity.productId;
         this.reorderLevel = entity.reorderLevel;
         this.stockQuantity = entity.stockQuantity;
         this.unitOfMeasure = entity.unitOfMeasure;

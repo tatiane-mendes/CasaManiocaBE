@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../common';
 import { IngredientData, IngredientInput, IngredientOutput } from '../model';
-import { InventoryService } from '../../inventory/service';
 
 @Injectable()
 export class IngredientService {
 
     public constructor(
-        private readonly prismaService: PrismaService,
-        private readonly inventoryService: InventoryService
+        private readonly prismaService: PrismaService
     ) { }
 
     /**
@@ -41,8 +39,7 @@ export class IngredientService {
     }
 
     private async returnOutput(entity: IngredientData): Promise<IngredientOutput> {
-        return new IngredientOutput(entity, 
-            await this.inventoryService.findId(entity.productId));
+        return new IngredientOutput(entity);
     }
 
     /**

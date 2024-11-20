@@ -30,7 +30,6 @@ model Inventory {
 
 model Ingredient {
   id              Int    @id @default(autoincrement())
-  productId       Int
   name            String
   stockQuantity   Decimal
   reorderLevel    Decimal
