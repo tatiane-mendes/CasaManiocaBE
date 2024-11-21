@@ -65,7 +65,7 @@ export class ProductionController {
     @ApiResponse({ status: HttpStatus.OK, type: ProductionOutput })
     public async delete(@Body(ProductionPipe) input: ProductionInput): Promise<ProductionOutput> {
 
-        const entity = await this.productionService.delete(input.id);
+        const entity = await this.productionService.delete(input);
         this.logger.info(`Deleted the production with ID ${entity.id}`);
 
         return entity;
