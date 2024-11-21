@@ -77,7 +77,7 @@ export class ProductionService {
 
         const productionBeforeUpdate = await this.findId(data.id);
 
-        const quantityProduced = data.quantityProduced.minus(productionBeforeUpdate.quantityProduced);
+        const quantityProduced = new Decimal(Number(data.quantityProduced) - Number(productionBeforeUpdate.quantityProduced));
         
         const postProductionStock = await this.calculateQuantityInventory(quantityProduced, data.productId, true);
 
