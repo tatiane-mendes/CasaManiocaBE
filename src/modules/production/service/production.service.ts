@@ -4,6 +4,8 @@ import { PrismaService } from '../../common';
 import { ProductionOutput, ProductionInput } from '../model';
 import { ProductionData } from '../model/production.data';
 import { InventoryService } from '../../inventory/service';
+import { InventoryData } from '../../inventory';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class ProductionService {
@@ -54,8 +56,12 @@ export class ProductionService {
      */
     public async create(data: ProductionInput): Promise<ProductionOutput> {
 
+        const postProductionStock = await this.calculateQuantityInventory(data.quantityProduced, data.productId);
+
+        const newData = new ProductionData({...data, postProductionStock: postProductionStock });
+
         const entity = await this.prismaService.production.create({
-            data
+            data: newData,
         });
 
         return this.returnOutput(entity);
@@ -69,8 +75,16 @@ export class ProductionService {
      */
     public async update(data: ProductionInput): Promise<ProductionOutput> {
 
+        const productionBeforeUpdate = await this.findId(data.id);
+
+        const quantityProduced = data.quantityProduced.minus(productionBeforeUpdate.quantityProduced);
+        
+        const postProductionStock = await this.calculateQuantityInventory(quantityProduced, data.productId);
+
+        const updateData = new ProductionData({...data, postProductionStock: postProductionStock });
+
         const entity = await this.prismaService.production.update({
-            data,
+            data: updateData,
             where: { id: data.id }
         });
 
@@ -90,5 +104,19 @@ export class ProductionService {
         });
 
         return this.returnOutput(entity);
+    }
+
+    private async calculateQuantityInventory(quantityProduced: Decimal, inventoryId: number): Promise<Decimal> {
+
+        const inventory = await this.inventoryService.findId(inventoryId);
+        const quantityInventory = inventory.quantity.add(quantityProduced);
+        
+        await this.inventoryService.update(new InventoryData({
+            ...inventory,
+            quantity: quantityInventory
+        }));
+
+        return quantityInventory;
+       
     }
 }
