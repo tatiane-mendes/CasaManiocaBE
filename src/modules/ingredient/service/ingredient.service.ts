@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../common';
 import { IngredientData, IngredientInput, IngredientOutput } from '../model';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class IngredientService {
@@ -86,5 +87,18 @@ export class IngredientService {
         });
 
         return this.returnOutput(entity);
+    }
+
+    public async calculateStockQuantityIngredient(quantityProduced: Decimal, ingredientId: number, addOrMinus: boolean): Promise<Decimal> {
+
+        const ingredient = await this.findId(ingredientId);
+        const stockQuantityIngredient = addOrMinus ? ingredient.stockQuantity.add(quantityProduced) : ingredient.stockQuantity.minus(quantityProduced);
+        
+        await this.update(new IngredientData({
+            ...ingredient,
+            stockQuantity: stockQuantityIngredient
+        }));
+
+        return stockQuantityIngredient;
     }
 }
