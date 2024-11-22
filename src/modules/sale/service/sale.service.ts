@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common';
 import { SaleOutput, SaleInput, SaleData } from '../model';
 import { InventoryService } from '../../inventory/service';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class SaleService {
@@ -53,6 +54,8 @@ export class SaleService {
      */
     public async create(data: SaleInput): Promise<SaleOutput> {
 
+        await this.inventoryService.calculateQuantityInventory(data.quantitySold, data.productId, false);
+
         const entity = await this.prismaService.sale.create({
             data
         });
@@ -68,6 +71,12 @@ export class SaleService {
      */
     public async update(data: SaleInput): Promise<SaleOutput> {
 
+        const productionBeforeUpdate = await this.findId(data.id);
+
+        const quantityProduced = new Decimal(Number(productionBeforeUpdate.quantitySold) - Number(data.quantitySold));
+        
+        await this.inventoryService.calculateQuantityInventory(quantityProduced, data.productId, false);
+
         const entity = await this.prismaService.sale.update({
             data,
             where: { id: data.id }
@@ -82,10 +91,12 @@ export class SaleService {
      * @param data sale id
      * @returns A sale deleted in the database
      */
-    public async delete(id: number): Promise<SaleOutput> {
+    public async delete(data: SaleInput): Promise<SaleOutput> {
+
+        await this.inventoryService.calculateQuantityInventory(data.quantitySold, data.productId, true);
 
         const entity = await this.prismaService.sale.delete({
-            where: { id }
+            where: { id: data.id }
         });
 
         return this.returnOutput(entity);

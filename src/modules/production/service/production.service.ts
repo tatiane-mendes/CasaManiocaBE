@@ -4,7 +4,6 @@ import { PrismaService } from '../../common';
 import { ProductionOutput, ProductionInput } from '../model';
 import { ProductionData } from '../model/production.data';
 import { InventoryService } from '../../inventory/service';
-import { InventoryData } from '../../inventory';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
@@ -56,7 +55,7 @@ export class ProductionService {
      */
     public async create(data: ProductionInput): Promise<ProductionOutput> {
 
-        const postProductionStock = await this.calculateQuantityInventory(data.quantityProduced, data.productId, true);
+        const postProductionStock = await this.inventoryService.calculateQuantityInventory(data.quantityProduced, data.productId, true);
 
         const newData = new ProductionData({...data, postProductionStock: postProductionStock });
 
@@ -79,7 +78,7 @@ export class ProductionService {
 
         const quantityProduced = new Decimal(Number(data.quantityProduced) - Number(productionBeforeUpdate.quantityProduced));
         
-        const postProductionStock = await this.calculateQuantityInventory(quantityProduced, data.productId, true);
+        const postProductionStock = await this.inventoryService.calculateQuantityInventory(quantityProduced, data.productId, true);
 
         const updateData = new ProductionData({...data, postProductionStock: postProductionStock });
 
@@ -99,26 +98,12 @@ export class ProductionService {
      */
     public async delete(data: ProductionInput): Promise<ProductionOutput> {
 
-        await this.calculateQuantityInventory(data.quantityProduced, data.productId, false);
+        await this.inventoryService.calculateQuantityInventory(data.quantityProduced, data.productId, false);
 
         const entity = await this.prismaService.production.delete({
             where: { id: data.id }
         });
 
         return this.returnOutput(entity);
-    }
-
-    private async calculateQuantityInventory(quantityProduced: Decimal, inventoryId: number, addOrMinus: boolean): Promise<Decimal> {
-
-        const inventory = await this.inventoryService.findId(inventoryId);
-        const quantityInventory = addOrMinus ? inventory.quantity.add(quantityProduced) : inventory.quantity.minus(quantityProduced);
-        
-        await this.inventoryService.update(new InventoryData({
-            ...inventory,
-            quantity: quantityInventory
-        }));
-
-        return quantityInventory;
-       
     }
 }

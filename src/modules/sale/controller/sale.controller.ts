@@ -65,7 +65,7 @@ export class SaleController {
     @ApiResponse({ status: HttpStatus.OK, type: SaleOutput })
     public async delete(@Body(SalePipe) input: SaleInput): Promise<SaleOutput> {
 
-        const entity = await this.saleService.delete(input.id);
+        const entity = await this.saleService.delete(input);
         this.logger.info(`Deleted the sale with ID ${entity.id}`);
 
         return entity;
