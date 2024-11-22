@@ -35,6 +35,15 @@ export class RecipeController {
         return this.recipeService.findId(id);
     }
 
+    @Get('by-inventory/:id')
+    @UseGuards(RestrictedGuard)
+    @ApiOperation({ summary: 'Find recipe by inventory' })
+    @ApiResponse({ status: HttpStatus.OK, isArray: true, type: RecipeOutput })
+    public async findByInventoryId(@Param('id') id: number): Promise<RecipeOutput[]> {
+
+        return this.recipeService.findIdByInventory(id);
+    }
+
     @Post()
     @UseGuards(RestrictedGuard)
     @ApiOperation({ summary: 'Create recipe' })

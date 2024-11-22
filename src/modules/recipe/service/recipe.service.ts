@@ -42,6 +42,22 @@ export class RecipeService {
         return this.returnOutput(entity);
     }
 
+    /**
+     * Find recipe by inventory id in the database
+     *
+     * @returns A recipe list
+     */
+    public async findIdByInventory(id: number): Promise<RecipeOutput[]> {
+
+        const entities = await this.prismaService.recipe.findMany({ where: { productId: +id} });
+
+        const list = await Promise.all(
+            entities.map(async entity => this.returnOutput(entity))
+        );
+        
+        return list;
+    }
+
     private async returnOutput(entity: RecipeData): Promise<RecipeOutput> {
         return new RecipeOutput(entity, 
             await this.ingredientService.findId(entity.ingredientId), 

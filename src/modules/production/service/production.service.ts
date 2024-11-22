@@ -5,13 +5,17 @@ import { ProductionOutput, ProductionInput } from '../model';
 import { ProductionData } from '../model/production.data';
 import { InventoryService } from '../../inventory/service';
 import { Decimal } from '@prisma/client/runtime/library';
+import { RecipeService } from '../../recipe/service';
+import { IngredientService } from '../../ingredient/service';
 
 @Injectable()
 export class ProductionService {
 
     public constructor(
         private readonly prismaService: PrismaService,
-        private readonly inventoryService: InventoryService
+        private readonly inventoryService: InventoryService,
+        private readonly recipeService: RecipeService,
+        private readonly ingredientService: IngredientService
     ) { }
 
     /**
@@ -55,9 +59,7 @@ export class ProductionService {
      */
     public async create(data: ProductionInput): Promise<ProductionOutput> {
 
-        const postProductionStock = await this.inventoryService.calculateQuantityInventory(data.quantityProduced, data.productId, true);
-
-        const newData = new ProductionData({...data, postProductionStock: postProductionStock });
+        const newData = await this.moveStockInInventoryAndIngredientsToProduction(data, data.quantityProduced, true);
 
         const entity = await this.prismaService.production.create({
             data: newData,
@@ -74,13 +76,9 @@ export class ProductionService {
      */
     public async update(data: ProductionInput): Promise<ProductionOutput> {
 
-        const productionBeforeUpdate = await this.findId(data.id);
-
-        const quantityProduced = new Decimal(Number(data.quantityProduced) - Number(productionBeforeUpdate.quantityProduced));
+        const quantityProduced = await this.recalculateQuantityProducedByThisProduction(data.id, data.quantityProduced);
         
-        const postProductionStock = await this.inventoryService.calculateQuantityInventory(quantityProduced, data.productId, true);
-
-        const updateData = new ProductionData({...data, postProductionStock: postProductionStock });
+        const updateData = await this.moveStockInInventoryAndIngredientsToProduction(data, quantityProduced, true);
 
         const entity = await this.prismaService.production.update({
             data: updateData,
@@ -98,12 +96,38 @@ export class ProductionService {
      */
     public async delete(data: ProductionInput): Promise<ProductionOutput> {
 
-        await this.inventoryService.calculateQuantityInventory(data.quantityProduced, data.productId, false);
+        await this.moveStockInInventoryAndIngredientsToProduction(data, data.quantityProduced, false);
 
         const entity = await this.prismaService.production.delete({
             where: { id: data.id }
         });
 
         return this.returnOutput(entity);
+    }
+
+    private async recalculateQuantityProducedByThisProduction(id: number, quantityProduced: Decimal): Promise<Decimal> {
+        const productionBeforeUpdate = await this.findId(id);
+
+        return new Decimal(Number(quantityProduced) - Number(productionBeforeUpdate.quantityProduced));
+    }
+
+    private async moveStockInInventoryAndIngredientsToProduction(data: ProductionInput, quantityProduced: Decimal, addOrMinus: boolean): Promise<ProductionData> {
+        const postProductionStock = await this.inventoryService.calculateQuantityInventory(quantityProduced, data.productId, addOrMinus);
+        
+        await this.calculateQuantityIngredientByProductRecipe(data.productId, quantityProduced, !addOrMinus);
+
+        const newData = new ProductionData({...data, postProductionStock: postProductionStock });
+
+        return newData;
+    }
+
+    private async calculateQuantityIngredientByProductRecipe(inventoryId: number, quantityProduced: Decimal, addOrMinus: boolean) {
+        const recipes = await this.recipeService.findIdByInventory(inventoryId);
+
+        recipes.forEach(async recipe => {
+            const quantityCalculatedPerUnit = new Decimal(Number(recipe.quantityPerUnit) * Number(quantityProduced));
+            await this.ingredientService.calculateStockQuantityIngredient(quantityCalculatedPerUnit, recipe.ingredient.id, addOrMinus);
+        });
+
     }
 }

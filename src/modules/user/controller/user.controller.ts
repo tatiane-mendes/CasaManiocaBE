@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpStatus, Post, Put, Delete, UseGuards, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { LoggerService, RestrictedGuard } from '../../common';
+import { GuestGuard, LoggerService, RestrictedGuard } from '../../common';
 
 import { UserPipe } from '../flow';
 import { UserInput, UserOutput } from '../model';
@@ -72,7 +72,7 @@ export class UserController {
     }
 
     @Put('recorevy-password')
-    @UseGuards(RestrictedGuard)
+    @UseGuards(GuestGuard)
     @ApiOperation({ summary: 'Recovery password' })
     @ApiResponse({ status: HttpStatus.OK, type: UserOutput })
     public async recoveryPassword(@Query('email') email: string): Promise<UserOutput> {
